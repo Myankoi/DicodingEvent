@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,7 +35,9 @@ fun HorizontalEventCard(
     onClickEvent: () -> Unit,
 ) {
     OutlinedCard(
-        modifier = modifier.clickable { onClickEvent() }
+        modifier = modifier.clickable { onClickEvent() },
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.background),
+        elevation = CardDefaults.outlinedCardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -47,6 +53,7 @@ fun HorizontalEventCard(
                         .size(100.dp)
                         .clip(shape = RoundedCornerShape(8.dp)),
                     model = event.imageLogo,
+                    contentScale = ContentScale.FillWidth,
                     contentDescription = "Event Image",
                 )
                 Spacer(Modifier.width(8.dp))

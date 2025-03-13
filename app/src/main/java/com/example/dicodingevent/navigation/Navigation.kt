@@ -1,5 +1,7 @@
 package com.example.dicodingevent.navigation
 
+import androidx.activity.SystemBarStyle
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +21,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,13 +43,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.dicodingevent.ui.component.bottomBarItem
 import com.example.dicodingevent.ui.screen.detail.DetailScreen
+import com.example.dicodingevent.ui.screen.favorite.FavoriteScreen
 import com.example.dicodingevent.ui.screen.finished.FinishedScreen
 import com.example.dicodingevent.ui.screen.finished.UpcomingScreen
 import com.example.dicodingevent.ui.screen.home.HomeScreen
+import com.example.dicodingevent.ui.screen.setting.SettingScreen
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppNavigation(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
 ) {
     var navIndex by remember { mutableIntStateOf(0) }
     var barVisible by remember { mutableStateOf(true) }
@@ -54,6 +61,7 @@ fun AppNavigation(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -72,7 +80,8 @@ fun AppNavigation(
                             content = {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = null
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             },
                             onClick = {
@@ -94,10 +103,19 @@ fun AppNavigation(
         bottomBar = {
             if (barVisible) {
                 NavigationBar(
-                    modifier = Modifier.height(110.dp),
+                    modifier = Modifier,
+                    containerColor = MaterialTheme.colorScheme.background
                 ) {
                     bottomBarItem().forEachIndexed { index, bar ->
                         NavigationBarItem(
+//                            alwaysShowLabel = index == navIndex,
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = MaterialTheme.colorScheme.secondary,
+                                selectedIconColor = MaterialTheme.colorScheme.onSecondary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onBackground,
+                                selectedTextColor = MaterialTheme.colorScheme.secondary,
+                                unselectedTextColor = MaterialTheme.colorScheme.onBackground
+                            ),
                             selected = index == navIndex,
                             onClick = {
                                 navIndex = index
@@ -165,6 +183,22 @@ fun AppNavigation(
                     onLoad = { name ->
                         topBarText = name
                     }
+                )
+            }
+            composable("Favorite") {
+                barVisible = true
+                navIndex = 3
+                topBarText = "Favorite Event"
+                FavoriteScreen(
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+            composable("Setting") {
+                barVisible = true
+                navIndex = 4
+                topBarText = "Setting"
+                SettingScreen(
+                    modifier = Modifier.padding(innerPadding)
                 )
             }
         }

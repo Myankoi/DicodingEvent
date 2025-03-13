@@ -1,44 +1,53 @@
 package com.example.dicodingevent.ui.screen.detail
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.dicodingevent.data.EventRepository
+import com.example.dicodingevent.data.FavoriteEventRepository
 import com.example.dicodingevent.data.remote.response.EventsItem
-import com.example.dicodingevent.data.remote.retrofit.ApiConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import retrofit2.awaitResponse
+import com.example.dicodingevent.data.Result
+import kotlinx.coroutines.flow.asStateFlow
 
-class DetailViewModel : ViewModel() {
-    private val apiService = ApiConfig.getApiService()
+class DetailViewModel(private val eventRepository: EventRepository? = null, private val favRepository: FavoriteEventRepository? = null) : ViewModel() {
+    private val _event = MutableStateFlow<Result<EventsItem>>(Result.Loading)
+    val event: StateFlow<Result<EventsItem>> = _event
 
-    var isLoading by mutableStateOf(false)
-    var isConnectedToInternet by mutableStateOf(true)
-
-    private val _event = MutableStateFlow<EventsItem?>(null)
-    val event: StateFlow<EventsItem?> = _event
+    private val _isExist = MutableStateFlow(false)
+    val isExist = _isExist.asStateFlow()
 
     fun getEventById(eventId: String) {
-        isLoading = true
+        _event.value = Result.Loading
         viewModelScope.launch {
             try {
-                val response =
-                    apiService.getEventById(id = eventId).awaitResponse()
-
-                if (response.isSuccessful) {
-                    _event.value = response.body()?.event
+                val response = eventRepository?.getEventById(id = eventId)
+                if (response != null) {
+                    _event.value = Result.Success(response)
+                } else {
+                    _event.value = Result.Error("Event not found")
                 }
-                isConnectedToInternet = true
             } catch (e: Exception) {
                 Log.e("DetailViewModel", "Error fetching event", e)
-                isConnectedToInternet = false
+                _event.value = Result.Error("No Internet")
+            }
+        }
+    }
 
-            } finally {
-                isLoading = false
+    suspend fun checkIfExist(eventId: String) {
+        _isExist.value = favRepository?.isEventFavorite(eventId) == true
+    }
+
+    fun addToFavRepository(eventId: String, eventName: String, mediaCover: String) {
+        viewModelScope.launch {
+            if (_isExist.value) {
+                favRepository?.removeFromFavorites(eventId)
+                _isExist.value = false
+            } else {
+                favRepository?.addToFavorites(eventId, eventName, mediaCover)
+                _isExist.value = true
             }
         }
     }

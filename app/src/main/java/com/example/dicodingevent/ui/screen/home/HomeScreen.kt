@@ -1,7 +1,5 @@
 package com.example.dicodingevent.ui.screen.home
 
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -65,11 +61,10 @@ fun HomeScreen(
                         .padding(top = 8.dp),
                     text = "Upcoming Events"
                 )
-                Spacer(Modifier.height(8.dp))
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     upcomingEvents?.let { events ->
                         items(events) { event ->
@@ -84,7 +79,6 @@ fun HomeScreen(
                         }
                     }
                 }
-                Spacer(Modifier.height(16.dp))
                 Text(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
@@ -93,10 +87,10 @@ fun HomeScreen(
                 )
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     finishedEvents?.let { events ->
                         items(events) { event ->

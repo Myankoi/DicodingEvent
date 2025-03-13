@@ -9,14 +9,14 @@ import retrofit2.http.Query
 
 interface ApiService {
     @GET("events/{id}")
-    fun getEventById(
+    suspend fun getEventById(
         @Path("id") id: String
-    ): Call<ResponseDetail>
+    ): ResponseDetail
 
     @GET("events")
-    fun getFilteredEvents(
+    suspend fun getFilteredEvents(
         @Query("active") active: Int,
         @Query("limit") limit: Int,
         @Query("q") search: String
-    ): Call<Response>
+    ): Response
 }

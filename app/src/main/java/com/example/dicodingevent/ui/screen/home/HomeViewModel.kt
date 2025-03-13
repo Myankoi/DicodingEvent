@@ -30,16 +30,16 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val upcomingResponse =
-                    apiService.getFilteredEvents(active = 1, limit = 5, search = "").awaitResponse()
+                    apiService.getFilteredEvents(active = 1, limit = 5, search = "")
                 val finishedResponse =
-                    apiService.getFilteredEvents(active = 0, limit = 5, search = "").awaitResponse()
+                    apiService.getFilteredEvents(active = 0, limit = 5, search = "")
 
-                if (upcomingResponse.isSuccessful) {
-                    _upcomingEvents.value = upcomingResponse.body()?.listEvents
+                if (upcomingResponse.error == false) {
+                    _upcomingEvents.value = upcomingResponse.listEvents
                 }
 
-                if (finishedResponse.isSuccessful) {
-                    _finishedEvents.value = finishedResponse.body()?.listEvents
+                if (finishedResponse.error == false) {
+                    _finishedEvents.value = finishedResponse.listEvents
                 }
                 isConnectedToInternet = true
             } catch (e: Exception) {

@@ -4,15 +4,15 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "events")
-class FavoriteEvent(
+@Entity(tableName = "favorite_events")
+data class FavoriteEvent(
     @field:ColumnInfo(name = "id")
     @field:PrimaryKey(autoGenerate = false)
-    var id: String = "",
+    val id: String = "",
 
     @field:ColumnInfo(name = "name")
-    var name: String = "",
+    val eventName: String = "",
 
     @field:ColumnInfo(name = "cover")
-    var mediaCover: String? = null,
+    val mediaCover: String? = null,
 )

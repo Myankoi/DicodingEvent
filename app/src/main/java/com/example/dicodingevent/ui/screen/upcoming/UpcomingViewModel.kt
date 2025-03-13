@@ -28,10 +28,9 @@ class UpcomingViewModel : ViewModel() {
             try {
                 val finishedResponse =
                     apiService.getFilteredEvents(active = 1, limit = 200, search = search)
-                        .awaitResponse()
 
-                if (finishedResponse.isSuccessful) {
-                    _upcomingEvents.value = finishedResponse.body()?.listEvents
+                if (finishedResponse.error == false) {
+                    _upcomingEvents.value = finishedResponse.listEvents
                 }
                 isConnectedToInternet = true
             } catch (e: Exception) {

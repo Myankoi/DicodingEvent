@@ -13,13 +13,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -44,6 +51,10 @@ import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.example.dicodingevent.data.EventRepository
+import com.example.dicodingevent.data.FavoriteEventRepository
+import com.example.dicodingevent.data.Injection
+import com.example.dicodingevent.data.Result
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -54,21 +65,16 @@ fun DetailScreen(
     eventId: Int,
     onLoad: (name: String) -> Unit,
     context: Context = LocalContext.current,
-    viewModel: DetailViewModel = viewModel()
+    eventRepository: EventRepository = Injection.provideRepository(context),
+    favRepository: FavoriteEventRepository = Injection.provideFavoriteRepository(context),
+    viewModel: DetailViewModel = viewModel(factory = DetailViewModelFactory(eventRepository, favRepository))
 ) {
     val eventData by viewModel.event.collectAsState()
-    val description = eventData?.description
-    val isLoading = viewModel.isLoading
-    val isConnectedToInternet = viewModel.isConnectedToInternet
+    val isAlreadyFav by viewModel.isExist.collectAsState()
 
     LaunchedEffect(eventId) {
         viewModel.getEventById(eventId.toString())
-    }
-
-    LaunchedEffect(eventData) {
-        eventData?.let {
-            onLoad(it.name.toString())
-        }
+        viewModel.checkIfExist(eventId.toString())
     }
 
     Column(
@@ -79,39 +85,58 @@ fun DetailScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+        when(eventData) {
+            is Result.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        } else {
-            if (isConnectedToInternet && eventData != null) {
-                GlideImage(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(0.dp)
-                        .align(Alignment.CenterHorizontally)
-                        .clip(shape = RoundedCornerShape(8.dp)),
-                    model = eventData?.mediaCover,
-                    contentDescription = "Event Image",
-                )
-                Spacer(Modifier.height(4.dp))
+            is Result.Success -> {
+                val event = (eventData as Result.Success).data
+                event.name?.let { onLoad(it) }
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    GlideImage(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(shape = RoundedCornerShape(8.dp)),
+                        model = event.mediaCover,
+                        contentScale = ContentScale.FillWidth,
+                        contentDescription = "Event Image",
+                    )
+                    IconButton(
+                        modifier = Modifier.align(Alignment.BottomEnd).offset(x = (-16).dp, y = 16.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.primary),
+                        onClick = {
+                            viewModel.addToFavRepository(event.id.toString(), event.name.toString(), event.mediaCover.toString())
+                        },
+                        content = {
+                            Icon(
+                                imageVector = if (!isAlreadyFav) Icons.Outlined.FavoriteBorder else Icons.Filled.Favorite,
+                                tint = if (!isAlreadyFav) MaterialTheme.colorScheme.background else Color.Red,
+                                contentDescription = null
+                            )
+                        }
+                    )
+                }
+                Spacer(Modifier.height(24.dp))
                 Text(
                     textAlign = TextAlign.Center,
-                    text = eventData?.name.toString(),
+                    text = event.name.toString(),
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
                     textAlign = TextAlign.Center,
-                    text = "By: " + eventData?.ownerName.toString(),
+                    text = "By: " + event.ownerName.toString(),
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
                     textAlign = TextAlign.Center,
-                    text = eventData?.summary.toString(),
+                    text = event.summary.toString(),
                     fontStyle = FontStyle.Italic,
                     fontSize = 12.sp
                 )
@@ -130,11 +155,11 @@ fun DetailScreen(
                         Text(
                             color = MaterialTheme.colorScheme.onPrimary,
                             textAlign = TextAlign.Center,
-                            text = "Sisa Kuota: " + (eventData?.quota!! - eventData?.registrants!!).toString(),
+                            text = "Sisa Kuota: " + (event.quota!! - event.registrants!!).toString(),
                             fontWeight = FontWeight.Bold,
                         )
                     }
-                    val date = eventData?.beginTime.toString().trim()
+                    val date = event.beginTime.toString().trim()
                     val date2 = date.replace(" ", "T")
                     val parse = LocalDateTime.parse(date2)
                     val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss")
@@ -153,38 +178,31 @@ fun DetailScreen(
                         )
                     }
                 }
-                if (description != null) {
-                    HtmlContent(description)
+                if (event.description != null) {
+                    HtmlContent(event.description)
                 } else {
                     Text(text = "Description not available")
                 }
                 Spacer(Modifier.height(4.dp))
                 Button(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     onClick = {
                         val intent =
-                            Intent(Intent.ACTION_VIEW, Uri.parse(eventData?.link.toString()))
+                            Intent(Intent.ACTION_VIEW, Uri.parse(event.link.toString()))
                         context.startActivity(intent)
                     },
                     content = { Text("Register") }
                 )
-                Spacer(Modifier.height(16.dp))
-            } else {
+            }
+            is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (!isConnectedToInternet) {
-                        Text(
-                            text = "Tidak ada koneksi internet.",
-                            color = Color.Red
-                        )
-                    } else {
-                        Text(
-                            text = "Error fetching events.",
-                            color = Color.Red
-                        )
-                    }
+                    Text(
+                        text = "Tidak ada koneksi internet.",
+                        color = Color.Red
+                    )
                 }
             }
         }
