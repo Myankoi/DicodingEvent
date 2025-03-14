@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -53,8 +54,8 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.dicodingevent.data.EventRepository
 import com.example.dicodingevent.data.FavoriteEventRepository
-import com.example.dicodingevent.data.Injection
 import com.example.dicodingevent.data.Result
+import com.example.dicodingevent.ui.factory.DetailViewModelFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -65,9 +66,14 @@ fun DetailScreen(
     eventId: Int,
     onLoad: (name: String) -> Unit,
     context: Context = LocalContext.current,
-    eventRepository: EventRepository = Injection.provideRepository(context),
-    favRepository: FavoriteEventRepository = Injection.provideFavoriteRepository(context),
-    viewModel: DetailViewModel = viewModel(factory = DetailViewModelFactory(eventRepository, favRepository))
+    eventRepository: EventRepository,
+    favEventRepository: FavoriteEventRepository,
+    viewModel: DetailViewModel = viewModel(
+        factory = DetailViewModelFactory(
+            eventRepository,
+            favEventRepository
+        )
+    )
 ) {
     val eventData by viewModel.event.collectAsState()
     val isAlreadyFav by viewModel.isExist.collectAsState()
@@ -85,7 +91,7 @@ fun DetailScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        when(eventData) {
+        when (eventData) {
             is Result.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -94,6 +100,7 @@ fun DetailScreen(
                     CircularProgressIndicator()
                 }
             }
+
             is Result.Success -> {
                 val event = (eventData as Result.Success).data
                 event.name?.let { onLoad(it) }
@@ -109,9 +116,17 @@ fun DetailScreen(
                         contentDescription = "Event Image",
                     )
                     IconButton(
-                        modifier = Modifier.align(Alignment.BottomEnd).offset(x = (-16).dp, y = 16.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = (-16).dp, y = 16.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primary),
                         onClick = {
-                            viewModel.addToFavRepository(event.id.toString(), event.name.toString(), event.mediaCover.toString())
+                            viewModel.addToFavRepository(
+                                event.id.toString(),
+                                event.name.toString(),
+                                event.mediaCover.toString()
+                            )
                         },
                         content = {
                             Icon(
@@ -185,7 +200,9 @@ fun DetailScreen(
                 }
                 Spacer(Modifier.height(4.dp))
                 Button(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
                     onClick = {
                         val intent =
                             Intent(Intent.ACTION_VIEW, Uri.parse(event.link.toString()))
@@ -194,13 +211,14 @@ fun DetailScreen(
                     content = { Text("Register") }
                 )
             }
+
             is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Tidak ada koneksi internet.",
+                        text = "No Internet Connection.",
                         color = Color.Red
                     )
                 }
@@ -214,6 +232,7 @@ fun HtmlContent(html: String) {
     val context = LocalContext.current
     val annotatedText = parseHtmlToAnnotatedString(html)
 
+    @Suppress("DEPRECATION")
     ClickableText(
         text = annotatedText,
         onClick = { offset ->
@@ -223,7 +242,10 @@ fun HtmlContent(html: String) {
                     context.startActivity(intent)
                 }
         },
-        style = androidx.compose.ui.text.TextStyle(color = MaterialTheme.colorScheme.onBackground)
+        style = TextStyle(
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Justify
+        )
     )
 }
 

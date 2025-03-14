@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,18 +29,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dicodingevent.data.EventRepository
+import com.example.dicodingevent.data.Result
 import com.example.dicodingevent.ui.component.HorizontalEventCard
+import com.example.dicodingevent.ui.factory.EventViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinishedScreen(
     modifier: Modifier,
     onClickEvent: (id: String) -> Unit,
-    viewModel: FinishedViewModel = viewModel()
+    eventRepository: EventRepository,
+    viewModel: FinishedViewModel = viewModel(factory = EventViewModelFactory(eventRepository))
 ) {
     val finishedEvents by viewModel.finishedEvents.collectAsState()
-    val isLoading = viewModel.isLoading
-    val isConnectedToInternet = viewModel.isConnectedToInternet
     var search by remember { mutableStateOf("") }
 
     LaunchedEffect(true) {
@@ -49,8 +50,7 @@ fun FinishedScreen(
     }
 
     Column(
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Top
+        modifier = modifier.fillMaxSize()
     ) {
         SearchBar(
             windowInsets = WindowInsets(0.dp),
@@ -74,17 +74,20 @@ fun FinishedScreen(
             onSearch = {},
             content = {}
         )
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.CenterHorizontally)
-            )
-        } else {
-            if (isConnectedToInternet && finishedEvents != null) {
-                if (finishedEvents.isNullOrEmpty()) {
+        when (finishedEvents) {
+            is Result.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+            }
+
+            is Result.Success -> {
+                val finishedEventData = (finishedEvents as Result.Success).data
+                if (finishedEventData.isEmpty()) {
                     Text(
-                        "Events tidak ditemukan.",
+                        "Events Not Found",
                         modifier = Modifier
                             .padding(16.dp)
                             .align(Alignment.CenterHorizontally)
@@ -94,38 +97,31 @@ fun FinishedScreen(
                         modifier = Modifier
                             .fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        finishedEvents?.let { events ->
-                            items(events) { event ->
-                                event?.let {
-                                    HorizontalEventCard(
-                                        modifier = Modifier,
-                                        event = it,
-                                        onClickEvent = { onClickEvent(it.id.toString()) }
-                                    )
-                                }
+                        items(finishedEventData) { event ->
+                            event?.let {
+                                HorizontalEventCard(
+                                    modifier = Modifier,
+                                    event = it,
+                                    onClickEvent = { onClickEvent(it.id.toString()) }
+                                )
                             }
                         }
                     }
                 }
-            } else {
+            }
+
+            is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (!isConnectedToInternet) {
-                        Text(
-                            text = "Tidak ada koneksi internet.",
-                            color = Color.Red
-                        )
-                    } else {
-                        Text(
-                            text = "Error fetching events.",
-                            color = Color.Red
-                        )
-                    }
+                    Text(
+                        text = "No Internet Connection",
+                        color = Color.Red
+                    )
                 }
             }
         }

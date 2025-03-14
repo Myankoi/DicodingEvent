@@ -1,7 +1,5 @@
-package com.example.dicodingevent.ui.screen.finished
+package com.example.dicodingevent.ui.screen.upcoming
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,17 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,19 +29,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dicodingevent.data.EventRepository
+import com.example.dicodingevent.data.Result
 import com.example.dicodingevent.ui.component.VerticalEventCard
-import com.example.dicodingevent.ui.screen.upcoming.UpcomingViewModel
+import com.example.dicodingevent.ui.factory.EventViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpcomingScreen(
     modifier: Modifier,
     onClickEvent: (id: String) -> Unit,
-    viewModel: UpcomingViewModel = viewModel()
+    eventRepository: EventRepository,
+    viewModel: UpcomingViewModel = viewModel(factory = EventViewModelFactory(eventRepository))
 ) {
     val upcomingEvents by viewModel.upcomingEvents.collectAsState()
-    val isLoading = viewModel.isLoading
-    val isConnectedToInternet = viewModel.isConnectedToInternet
     var search by remember { mutableStateOf("") }
 
     LaunchedEffect(true) {
@@ -80,17 +75,20 @@ fun UpcomingScreen(
             onSearch = {},
             content = {}
         )
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.CenterHorizontally)
-            )
-        } else {
-            if (isConnectedToInternet && upcomingEvents != null) {
-                if (upcomingEvents.isNullOrEmpty()) {
+        when (upcomingEvents) {
+            is Result.Loading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+            }
+
+            is Result.Success -> {
+                val upcomingEventData = (upcomingEvents as Result.Success).data
+                if (upcomingEventData.isEmpty()) {
                     Text(
-                        "Events tidak ditemukan.",
+                        "Events Not Found",
                         modifier = Modifier
                             .padding(16.dp)
                             .align(Alignment.CenterHorizontally)
@@ -99,40 +97,33 @@ fun UpcomingScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        upcomingEvents?.let { events ->
-                            items(events) { event ->
-                                event?.let {
-                                    VerticalEventCard(
-                                        modifier = Modifier,
-                                        event = it,
-                                        image = 0,
-                                        onClickEvent = { onClickEvent(it.id.toString()) }
-                                    )
-                                }
+                        items(upcomingEventData) { event ->
+                            event?.let {
+                                VerticalEventCard(
+                                    modifier = Modifier,
+                                    event = it,
+                                    image = 2,
+                                    onClickEvent = { onClickEvent(it.id.toString()) }
+                                )
                             }
                         }
                     }
                 }
-            } else {
+            }
+
+            is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (!isConnectedToInternet) {
-                        Text(
-                            text = "Tidak ada koneksi internet.",
-                            color = Color.Red
-                        )
-                    } else {
-                        Text(
-                            text = "Error fetching events.",
-                            color = Color.Red
-                        )
-                    }
+                    Text(
+                        text = "No Internet Connection.",
+                        color = Color.Red
+                    )
                 }
             }
         }

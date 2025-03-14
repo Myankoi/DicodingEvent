@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,14 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dicodingevent.data.EventRepository
+import com.example.dicodingevent.data.Result
 import com.example.dicodingevent.ui.component.HorizontalEventCard
 import com.example.dicodingevent.ui.component.VerticalEventCard
+import com.example.dicodingevent.ui.factory.EventViewModelFactory
 
 @Composable
 fun HomeScreen(
     modifier: Modifier,
     onClickEvent: (id: String) -> Unit,
-    viewModel: HomeViewModel = viewModel()
+    eventRepository: EventRepository,
+    viewModel: HomeViewModel = viewModel(factory = EventViewModelFactory(eventRepository)),
 ) {
     LaunchedEffect(true) {
         viewModel.getEvents()
@@ -39,43 +41,43 @@ fun HomeScreen(
 
     val upcomingEvents by viewModel.upcomingEvents.collectAsState()
     val finishedEvents by viewModel.finishedEvents.collectAsState()
-    val isLoading = viewModel.isLoading
-    val isConnectedToInternet = viewModel.isConnectedToInternet
 
     Column(
         modifier = modifier
             .fillMaxSize()
     ) {
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+        when {
+            (upcomingEvents is Result.Loading) && (finishedEvents is Result.Loading) -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        } else {
-            if (isConnectedToInternet && finishedEvents != null && upcomingEvents != null) {
+
+            (upcomingEvents is Result.Success) && (finishedEvents is Result.Success) -> {
+                val upcomingEventData = (upcomingEvents as Result.Success).data
+                val finishedEventData = (finishedEvents as Result.Success).data
                 Text(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(top = 8.dp),
-                    text = "Upcoming Events"
+                    text = if (upcomingEventData.isEmpty()) "Stay tuned for upcoming events!" else "Upcoming Events"
                 )
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    upcomingEvents?.let { events ->
-                        items(events) { event ->
-                            event?.let {
-                                VerticalEventCard(
-                                    modifier = Modifier.width(150.dp),
-                                    event = it,
-                                    image = 1,
-                                    onClickEvent = { onClickEvent(it.id.toString()) }
-                                )
-                            }
+                    items(upcomingEventData) { event ->
+                        event?.let {
+                            VerticalEventCard(
+                                modifier = Modifier.width(150.dp),
+                                event = it,
+                                image = 1,
+                                onClickEvent = { onClickEvent(it.id.toString()) }
+                            )
                         }
                     }
                 }
@@ -88,38 +90,31 @@ fun HomeScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    finishedEvents?.let { events ->
-                        items(events) { event ->
-                            event?.let {
-                                HorizontalEventCard(
-                                    modifier = Modifier,
-                                    event = it,
-                                    onClickEvent = { onClickEvent(it.id.toString()) }
-                                )
-                            }
+                    items(finishedEventData) { event ->
+                        event?.let {
+                            HorizontalEventCard(
+                                modifier = Modifier,
+                                event = it,
+                                onClickEvent = { onClickEvent(it.id.toString()) }
+                            )
                         }
                     }
                 }
-            } else {
+            }
+
+            else -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (!isConnectedToInternet) {
-                        Text(
-                            text = "Tidak ada koneksi internet.",
-                            color = Color.Red
-                        )
-                    } else {
-                        Text(
-                            text = "Error fetching events.",
-                            color = Color.Red
-                        )
-                    }
+                    Text(
+                        text = "No Internet Connection",
+                        color = Color.Red
+                    )
                 }
             }
         }

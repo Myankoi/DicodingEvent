@@ -5,25 +5,27 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicodingevent.data.EventRepository
 import com.example.dicodingevent.data.FavoriteEventRepository
+import com.example.dicodingevent.data.Result
 import com.example.dicodingevent.data.remote.response.EventsItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.example.dicodingevent.data.Result
-import kotlinx.coroutines.flow.asStateFlow
 
-class DetailViewModel(private val eventRepository: EventRepository? = null, private val favRepository: FavoriteEventRepository? = null) : ViewModel() {
+class DetailViewModel(
+    private val eventRepository: EventRepository,
+    private val favRepository: FavoriteEventRepository
+) : ViewModel() {
     private val _event = MutableStateFlow<Result<EventsItem>>(Result.Loading)
     val event: StateFlow<Result<EventsItem>> = _event
 
     private val _isExist = MutableStateFlow(false)
-    val isExist = _isExist.asStateFlow()
+    val isExist: StateFlow<Boolean> = _isExist
 
     fun getEventById(eventId: String) {
         _event.value = Result.Loading
         viewModelScope.launch {
             try {
-                val response = eventRepository?.getEventById(id = eventId)
+                val response = eventRepository.getEventById(id = eventId)
                 if (response != null) {
                     _event.value = Result.Success(response)
                 } else {
@@ -37,16 +39,16 @@ class DetailViewModel(private val eventRepository: EventRepository? = null, priv
     }
 
     suspend fun checkIfExist(eventId: String) {
-        _isExist.value = favRepository?.isEventFavorite(eventId) == true
+        _isExist.value = favRepository.isEventFavorite(eventId) == true
     }
 
     fun addToFavRepository(eventId: String, eventName: String, mediaCover: String) {
         viewModelScope.launch {
             if (_isExist.value) {
-                favRepository?.removeFromFavorites(eventId)
+                favRepository.removeFromFavorites(eventId)
                 _isExist.value = false
             } else {
-                favRepository?.addToFavorites(eventId, eventName, mediaCover)
+                favRepository.addToFavorites(eventId, eventName, mediaCover)
                 _isExist.value = true
             }
         }
