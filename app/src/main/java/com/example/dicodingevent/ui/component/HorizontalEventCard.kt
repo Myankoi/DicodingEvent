@@ -1,10 +1,12 @@
 package com.example.dicodingevent.ui.component
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,9 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,8 +43,7 @@ fun HorizontalEventCard(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+                .fillMaxWidth().padding(8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -50,8 +51,8 @@ fun HorizontalEventCard(
             ) {
                 GlideImage(
                     modifier = Modifier
-                        .size(100.dp)
-                        .clip(shape = RoundedCornerShape(8.dp)),
+                        .size(128.dp)
+                        .clip(shape = CardDefaults.shape),
                     model = event.imageLogo,
                     contentScale = ContentScale.FillWidth,
                     contentDescription = "Event Image",
@@ -61,16 +62,19 @@ fun HorizontalEventCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
+                        modifier = Modifier.align(Alignment.Start),
                         overflow = TextOverflow.Ellipsis,
                         maxLines = 1,
                         text = event.name ?: "Unnamed Event",
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
+                        modifier = Modifier.align(Alignment.Start),
                         text = event.summary ?: "Unnamed Event",
                         overflow = TextOverflow.Ellipsis,
                         fontSize = 12.sp,
-                        maxLines = 2,
+                        textAlign = TextAlign.Justify,
+                        maxLines = 3,
                     )
                 }
             }
