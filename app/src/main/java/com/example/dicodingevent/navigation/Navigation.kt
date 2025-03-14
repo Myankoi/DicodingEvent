@@ -1,7 +1,6 @@
 package com.example.dicodingevent.navigation
 
-import androidx.activity.SystemBarStyle
-import androidx.compose.animation.ExperimentalAnimationApi
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
@@ -34,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,27 +39,32 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.dicodingevent.data.EventRepository
+import com.example.dicodingevent.data.FavoriteEventRepository
+import com.example.dicodingevent.data.Injection
 import com.example.dicodingevent.ui.component.bottomBarItem
 import com.example.dicodingevent.ui.screen.detail.DetailScreen
 import com.example.dicodingevent.ui.screen.favorite.FavoriteScreen
 import com.example.dicodingevent.ui.screen.finished.FinishedScreen
-import com.example.dicodingevent.ui.screen.finished.UpcomingScreen
+import com.example.dicodingevent.ui.screen.upcoming.UpcomingScreen
 import com.example.dicodingevent.ui.screen.home.HomeScreen
 import com.example.dicodingevent.ui.screen.setting.SettingScreen
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController(),
+    context: Context = LocalContext.current
 ) {
     var navIndex by remember { mutableIntStateOf(0) }
     var barVisible by remember { mutableStateOf(true) }
     var topBarText by remember { mutableStateOf("") }
 
+    val eventRepository: EventRepository = Injection.provideRepository()
+    val favEventRepository: FavoriteEventRepository = Injection.provideFavoriteRepository(context)
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -149,7 +152,8 @@ fun AppNavigation(
                     modifier = Modifier.padding(innerPadding),
                     onClickEvent = { id ->
                         navController.navigate("Detail/$id")
-                    }
+                    },
+                    eventRepository = eventRepository
                 )
             }
             composable("Upcoming") {
@@ -160,7 +164,8 @@ fun AppNavigation(
                     modifier = Modifier.padding(innerPadding),
                     onClickEvent = { id ->
                         navController.navigate("Detail/$id")
-                    }
+                    },
+                    eventRepository = eventRepository
                 )
             }
             composable("Finished") {
@@ -171,7 +176,8 @@ fun AppNavigation(
                     modifier = Modifier.padding(innerPadding),
                     onClickEvent = { id ->
                         navController.navigate("Detail/$id")
-                    }
+                    },
+                    eventRepository = eventRepository
                 )
             }
             composable("Detail/{id}") { backStackEntry ->
@@ -182,7 +188,9 @@ fun AppNavigation(
                     eventId = eventId.toInt(),
                     onLoad = { name ->
                         topBarText = name
-                    }
+                    },
+                    eventRepository = eventRepository,
+                    favEventRepository = favEventRepository
                 )
             }
             composable("Favorite") {
@@ -190,7 +198,11 @@ fun AppNavigation(
                 navIndex = 3
                 topBarText = "Favorite Event"
                 FavoriteScreen(
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    onClickEvent = { id ->
+                        navController.navigate("Detail/$id")
+                    },
+                    favEventRepository = favEventRepository
                 )
             }
             composable("Setting") {
