@@ -14,6 +14,12 @@ interface ApiService {
     ): ResponseDetail
 
     @GET("events")
+    suspend fun getReminderEvent(
+        @Query("active") active: Int = -1,
+        @Query("limit") limit: Int = 1
+    ) : Response
+
+    @GET("events")
     suspend fun getFilteredEvents(
         @Query("active") active: Int,
         @Query("limit") limit: Int,
