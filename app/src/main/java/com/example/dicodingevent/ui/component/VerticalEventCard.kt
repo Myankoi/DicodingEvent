@@ -15,6 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.dicodingevent.data.local.entity.FavoriteEvent
@@ -50,9 +51,10 @@ fun VerticalEventCard(
                 contentDescription = "Event Image",
             )
             Text(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(8.dp),
                 overflow = TextOverflow.Ellipsis,
                 fontWeight = FontWeight.Bold,
+                fontSize = if (image == 1) 12.sp else 16.sp,
                 maxLines = if (image == 1) 1 else 2,
                 text = event?.name ?: favEvent?.eventName.toString(),
             )
