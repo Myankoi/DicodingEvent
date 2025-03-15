@@ -46,14 +46,15 @@ import com.example.dicodingevent.ui.component.bottomBarItem
 import com.example.dicodingevent.ui.screen.detail.DetailScreen
 import com.example.dicodingevent.ui.screen.favorite.FavoriteScreen
 import com.example.dicodingevent.ui.screen.finished.FinishedScreen
-import com.example.dicodingevent.ui.screen.upcoming.UpcomingScreen
 import com.example.dicodingevent.ui.screen.home.HomeScreen
 import com.example.dicodingevent.ui.screen.setting.SettingScreen
+import com.example.dicodingevent.ui.screen.upcoming.UpcomingScreen
 
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController(),
-    context: Context = LocalContext.current
+    context: Context = LocalContext.current,
+    isDarkModeActive: Boolean
 ) {
     var navIndex by remember { mutableIntStateOf(0) }
     var barVisible by remember { mutableStateOf(true) }
@@ -210,7 +211,8 @@ fun AppNavigation(
                 navIndex = 4
                 topBarText = "Setting"
                 SettingScreen(
-                    modifier = Modifier.padding(innerPadding)
+                    modifier = Modifier.padding(innerPadding),
+                    isDarkModeActive = isDarkModeActive
                 )
             }
         }
