@@ -86,30 +86,21 @@ fun UpcomingScreen(
 
             is Result.Success -> {
                 val upcomingEventData = (upcomingEvents as Result.Success).data
-                if (upcomingEventData.isEmpty()) {
-                    Text(
-                        "Events Not Found",
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                    ) {
-                        items(upcomingEventData) { event ->
-                            event?.let {
-                                VerticalEventCard(
-                                    modifier = Modifier,
-                                    event = it,
-                                    image = 2,
-                                    onClickEvent = { onClickEvent(it.id.toString()) }
-                                )
-                            }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    items(upcomingEventData) { event ->
+                        event?.let {
+                            VerticalEventCard(
+                                modifier = Modifier,
+                                event = it,
+                                image = 2,
+                                onClickEvent = { onClickEvent(it.id.toString()) }
+                            )
                         }
                     }
                 }
@@ -118,10 +109,10 @@ fun UpcomingScreen(
             is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.TopCenter
                 ) {
                     Text(
-                        text = "No Internet Connection.",
+                        text = (upcomingEvents as Result.Error).error,
                         color = Color.Red
                     )
                 }

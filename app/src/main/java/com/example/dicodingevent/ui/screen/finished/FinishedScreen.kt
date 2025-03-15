@@ -116,10 +116,10 @@ fun FinishedScreen(
             is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.TopCenter
                 ) {
                     Text(
-                        text = "No Internet Connection",
+                        text = (finishedEvents as Result.Error).error,
                         color = Color.Red
                     )
                 }

@@ -87,9 +87,7 @@ fun DetailScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp)
-            .padding(top = 8.dp)
             .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         when (eventData) {
             is Result.Loading -> {
@@ -105,7 +103,7 @@ fun DetailScreen(
                 val event = (eventData as Result.Success).data
                 event.name?.let { onLoad(it) }
                 Box(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
                 ) {
                     GlideImage(
                         modifier = Modifier
@@ -137,7 +135,7 @@ fun DetailScreen(
                         }
                     )
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(8.dp))
                 Text(
                     textAlign = TextAlign.Center,
                     text = event.name.toString(),

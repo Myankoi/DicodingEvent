@@ -23,10 +23,10 @@ class UpcomingViewModel(
                 val upcomingResponse =
                     repository.getAllEvents(active = 1, limit = 5, search = search)
 
-                if (upcomingResponse != null) {
-                    _upcomingEvents.value = Result.Success(upcomingResponse)
-                } else {
+                if (upcomingResponse.isNullOrEmpty()) {
                     _upcomingEvents.value = Result.Error("Event not found")
+                } else {
+                    _upcomingEvents.value = Result.Success(upcomingResponse)
                 }
             } catch (e: Exception) {
                 Log.e("UpcomingViewModel", "Error fetching events", e)

@@ -22,11 +22,10 @@ class FinishedViewModel(
             try {
                 val finishedResponse =
                     repository.getAllEvents(active = 0, limit = 40, search = search)
-
-                if (finishedResponse != null) {
-                    _finishedEvents.value = Result.Success(finishedResponse)
-                } else {
+                if (finishedResponse.isNullOrEmpty()) {
                     _finishedEvents.value = Result.Error("Event not found")
+                } else {
+                    _finishedEvents.value = Result.Success(finishedResponse)
                 }
             } catch (e: Exception) {
                 Log.e("FinishedViewModel", "Error fetching events", e)

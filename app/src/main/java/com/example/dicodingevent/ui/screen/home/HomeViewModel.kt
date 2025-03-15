@@ -29,16 +29,16 @@ class HomeViewModel(private val repository: EventRepository) : ViewModel() {
                 val upcomingResponse = repository.getAllEvents(active = 1, limit = 5, search = "")
                 val finishedResponse = repository.getAllEvents(active = 0, limit = 5, search = "")
 
-                if (upcomingResponse != null) {
-                    _upcomingEvents.value = Result.Success(upcomingResponse)
-                } else {
+                if (upcomingResponse.isNullOrEmpty()) {
                     _upcomingEvents.value = Result.Error("Event not found")
+                } else {
+                    _upcomingEvents.value = Result.Success(upcomingResponse)
                 }
 
-                if (finishedResponse != null) {
-                    _finishedEvents.value = Result.Success(finishedResponse)
-                } else {
+                if (finishedResponse.isNullOrEmpty()) {
                     _finishedEvents.value = Result.Error("Event not found")
+                } else {
+                    _finishedEvents.value = Result.Success(finishedResponse)
                 }
 
             } catch (e: Exception) {

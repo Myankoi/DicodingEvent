@@ -9,7 +9,7 @@ class EventRepository(private val apiService: ApiService) {
             val response = apiService.getFilteredEvents(active, limit, search)
             response.listEvents ?: emptyList()
         } catch (e: Exception) {
-            emptyList()
+            null
         }
     }
 

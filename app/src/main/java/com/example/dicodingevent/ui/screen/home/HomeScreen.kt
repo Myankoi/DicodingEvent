@@ -47,7 +47,7 @@ fun HomeScreen(
             .fillMaxSize()
     ) {
         when {
-            (upcomingEvents is Result.Loading) && (finishedEvents is Result.Loading) -> {
+            upcomingEvents is Result.Loading || finishedEvents is Result.Loading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -55,9 +55,19 @@ fun HomeScreen(
                     CircularProgressIndicator()
                 }
             }
-
-            (upcomingEvents is Result.Success) && (finishedEvents is Result.Success) -> {
-                val upcomingEventData = (upcomingEvents as Result.Success).data
+            upcomingEvents is Result.Error && finishedEvents is Result.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = (finishedEvents as Result.Error).error,
+                        color = Color.Red
+                    )
+                }
+            }
+            upcomingEvents is Result.Success || finishedEvents is Result.Success -> {
+                val upcomingEventData = (upcomingEvents as Result.Success).data ?: emptyList()
                 val finishedEventData = (finishedEvents as Result.Success).data
                 Text(
                     modifier = Modifier
@@ -103,18 +113,6 @@ fun HomeScreen(
                             )
                         }
                     }
-                }
-            }
-
-            else -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "No Internet Connection",
-                        color = Color.Red
-                    )
                 }
             }
         }
