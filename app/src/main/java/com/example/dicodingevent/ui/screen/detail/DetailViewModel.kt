@@ -1,6 +1,5 @@
 package com.example.dicodingevent.ui.screen.detail
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicodingevent.data.EventRepository
@@ -26,14 +25,11 @@ class DetailViewModel(
         viewModelScope.launch {
             try {
                 val response = eventRepository.getEventById(id = eventId)
-                if (response != null) {
-                    _event.value = Result.Success(response)
-                } else {
-                    _event.value = Result.Error("Event not found")
-                }
+                response?.let {
+                    _event.value = Result.Success(it)
+                } ?: throw Exception("No Internet Connection.")
             } catch (e: Exception) {
-                Log.e("DetailViewModel", "Error fetching event", e)
-                _event.value = Result.Error("No Internet")
+                _event.value = Result.Error(e.message ?: "")
             }
         }
     }

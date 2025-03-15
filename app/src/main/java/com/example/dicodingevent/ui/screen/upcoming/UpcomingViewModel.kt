@@ -1,6 +1,5 @@
 package com.example.dicodingevent.ui.screen.upcoming
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicodingevent.data.EventRepository
@@ -22,15 +21,11 @@ class UpcomingViewModel(
             try {
                 val upcomingResponse =
                     repository.getAllEvents(active = 1, limit = 5, search = search)
-
-                if (upcomingResponse.isNullOrEmpty()) {
-                    _upcomingEvents.value = Result.Error("Event not found")
-                } else {
-                    _upcomingEvents.value = Result.Success(upcomingResponse)
-                }
+                upcomingResponse?.let {
+                    _upcomingEvents.value = Result.Success(it)
+                } ?: throw Exception("No Internet Connection.")
             } catch (e: Exception) {
-                Log.e("UpcomingViewModel", "Error fetching events", e)
-                _upcomingEvents.value = Result.Error("No Internet")
+                _upcomingEvents.value = Result.Error(e.message ?: "")
             }
         }
     }

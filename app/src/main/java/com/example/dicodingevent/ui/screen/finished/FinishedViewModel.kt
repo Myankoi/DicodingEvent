@@ -1,6 +1,5 @@
 package com.example.dicodingevent.ui.screen.finished
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dicodingevent.data.EventRepository
@@ -22,14 +21,11 @@ class FinishedViewModel(
             try {
                 val finishedResponse =
                     repository.getAllEvents(active = 0, limit = 40, search = search)
-                if (finishedResponse.isNullOrEmpty()) {
-                    _finishedEvents.value = Result.Error("Event not found")
-                } else {
-                    _finishedEvents.value = Result.Success(finishedResponse)
-                }
+                finishedResponse?.let {
+                    _finishedEvents.value = Result.Success(it)
+                } ?: throw Exception("No Internet Connection.")
             } catch (e: Exception) {
-                Log.e("FinishedViewModel", "Error fetching events", e)
-                _finishedEvents.value = Result.Error("No Internet")
+                _finishedEvents.value = Result.Error(e.message ?: "")
             }
         }
     }

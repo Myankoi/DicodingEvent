@@ -23,7 +23,7 @@ class FavoriteViewModel(private val favEventRepository: FavoriteEventRepository)
                 _favEvents.value = Result.Success(favResponse)
             } catch (e: Exception) {
                 Log.e("FavoriteViewModel", "Error fetching events", e)
-                _favEvents.value = Result.Error("No Internet")
+                _favEvents.value = Result.Error("No Internet Connection")
             }
         }
     }
