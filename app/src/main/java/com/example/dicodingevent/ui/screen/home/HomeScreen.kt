@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,9 +53,12 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
+
             upcomingEvents is Result.Error && finishedEvents is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -66,8 +70,9 @@ fun HomeScreen(
                     )
                 }
             }
+
             upcomingEvents is Result.Success || finishedEvents is Result.Success -> {
-                val upcomingEventData = (upcomingEvents as Result.Success).data ?: emptyList()
+                val upcomingEventData = (upcomingEvents as Result.Success).data
                 val finishedEventData = (finishedEvents as Result.Success).data
                 Text(
                     modifier = Modifier
@@ -99,7 +104,7 @@ fun HomeScreen(
                 )
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)

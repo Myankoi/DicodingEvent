@@ -55,6 +55,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.example.dicodingevent.data.EventRepository
 import com.example.dicodingevent.data.FavoriteEventRepository
 import com.example.dicodingevent.data.Result
+import com.example.dicodingevent.data.local.datastore.SettingPreferences
 import com.example.dicodingevent.ui.factory.DetailViewModelFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -62,7 +63,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun DetailScreen(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
     eventId: Int,
     onLoad: (name: String) -> Unit,
     context: Context = LocalContext.current,
@@ -77,6 +78,7 @@ fun DetailScreen(
 ) {
     val eventData by viewModel.event.collectAsState()
     val isAlreadyFav by viewModel.isExist.collectAsState()
+    val isDarkMode by SettingPreferences(context).getThemeSetting().collectAsState(false)
 
     LaunchedEffect(eventId) {
         viewModel.getEventById(eventId.toString())
@@ -85,9 +87,8 @@ fun DetailScreen(
 
     Column(
         modifier = modifier
-            .fillMaxSize()
             .padding(horizontal = 16.dp)
-            .verticalScroll(rememberScrollState()),
+            .fillMaxSize()
     ) {
         when (eventData) {
             is Result.Loading -> {
@@ -95,119 +96,131 @@ fun DetailScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
 
             is Result.Success -> {
                 val event = (eventData as Result.Success).data
                 event.name?.let { onLoad(it) }
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+                Column(
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
                 ) {
-                    GlideImage(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(shape = RoundedCornerShape(8.dp)),
-                        model = event.mediaCover,
-                        contentScale = ContentScale.FillWidth,
-                        contentDescription = "Event Image",
+                            .padding(vertical = 16.dp)
+                    ) {
+                        GlideImage(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(shape = RoundedCornerShape(8.dp)),
+                            model = event.mediaCover,
+                            contentScale = ContentScale.FillWidth,
+                            contentDescription = "Event Image",
+                        )
+                        IconButton(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .offset(x = (-16).dp, y = 16.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isDarkMode) {
+                                        MaterialTheme.colorScheme.onBackground
+                                    } else MaterialTheme.colorScheme.primary
+                                ),
+                            onClick = {
+                                viewModel.addToFavRepository(
+                                    event.id.toString(),
+                                    event.name.toString(),
+                                    event.mediaCover.toString()
+                                )
+                            },
+                            content = {
+                                Icon(
+                                    imageVector = if (!isAlreadyFav) Icons.Outlined.FavoriteBorder else Icons.Filled.Favorite,
+                                    tint = if (!isAlreadyFav) MaterialTheme.colorScheme.background else Color.Red,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        textAlign = TextAlign.Center,
+                        text = event.name.toString(),
+                        fontWeight = FontWeight.Bold,
                     )
-                    IconButton(
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        textAlign = TextAlign.Center,
+                        text = "By: " + event.ownerName.toString(),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        textAlign = TextAlign.Center,
+                        text = event.summary.toString(),
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 12.sp
+                    )
+                    Row(
                         modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .offset(x = (-16).dp, y = 16.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.primary),
-                        onClick = {
-                            viewModel.addToFavRepository(
-                                event.id.toString(),
-                                event.name.toString(),
-                                event.mediaCover.toString()
-                            )
-                        },
-                        content = {
-                            Icon(
-                                imageVector = if (!isAlreadyFav) Icons.Outlined.FavoriteBorder else Icons.Filled.Favorite,
-                                tint = if (!isAlreadyFav) MaterialTheme.colorScheme.background else Color.Red,
-                                contentDescription = null
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                textAlign = TextAlign.Center,
+                                text = "Sisa Kuota: " + (event.quota!! - event.registrants!!).toString(),
+                                fontWeight = FontWeight.Bold,
                             )
                         }
+                        val date = event.beginTime.toString().trim()
+                        val date2 = date.replace(" ", "T")
+                        val parse = LocalDateTime.parse(date2)
+                        val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss")
+                        val formattedDate = parse.format(formatter)
+                        Column(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                textAlign = TextAlign.Center,
+                                text = formattedDate,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                    if (event.description != null) {
+                        HtmlContent(event.description)
+                    } else {
+                        Text(text = "Description not available")
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        onClick = {
+                            val intent =
+                                Intent(Intent.ACTION_VIEW, Uri.parse(event.link.toString()))
+                            context.startActivity(intent)
+                        },
+                        content = { Text("Register") }
                     )
                 }
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = event.name.toString(),
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = "By: " + event.ownerName.toString(),
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = event.summary.toString(),
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 12.sp
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.primary)
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            textAlign = TextAlign.Center,
-                            text = "Sisa Kuota: " + (event.quota!! - event.registrants!!).toString(),
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    val date = event.beginTime.toString().trim()
-                    val date2 = date.replace(" ", "T")
-                    val parse = LocalDateTime.parse(date2)
-                    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss")
-                    val formattedDate = parse.format(formatter)
-                    Column(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.primary)
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            textAlign = TextAlign.Center,
-                            text = formattedDate,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-                if (event.description != null) {
-                    HtmlContent(event.description)
-                } else {
-                    Text(text = "Description not available")
-                }
-                Spacer(Modifier.height(4.dp))
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    onClick = {
-                        val intent =
-                            Intent(Intent.ACTION_VIEW, Uri.parse(event.link.toString()))
-                        context.startActivity(intent)
-                    },
-                    content = { Text("Register") }
-                )
             }
 
             is Result.Error -> {
@@ -216,7 +229,7 @@ fun DetailScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No Internet Connection.",
+                        text = (eventData as Result.Error).error,
                         color = Color.Red
                     )
                 }

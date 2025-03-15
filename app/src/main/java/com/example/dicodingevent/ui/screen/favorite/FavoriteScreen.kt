@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,14 +40,18 @@ fun FavoriteScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        when(favEvents) {
+        when (favEvents) {
             is Result.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
+
             is Result.Success -> {
                 val favEventData = (favEvents as Result.Success).data
                 if (favEventData.isEmpty()) {
@@ -78,6 +82,7 @@ fun FavoriteScreen(
                     }
                 }
             }
+
             is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,30 +78,42 @@ fun UpcomingScreen(
         )
         when (upcomingEvents) {
             is Result.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
 
             is Result.Success -> {
                 val upcomingEventData = (upcomingEvents as Result.Success).data
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    items(upcomingEventData) { event ->
-                        event?.let {
-                            VerticalEventCard(
-                                modifier = Modifier,
-                                event = it,
-                                image = 2,
-                                onClickEvent = { onClickEvent(it.id.toString()) }
-                            )
+                if (upcomingEventData.isEmpty()) {
+                    Text(
+                        "Events Not Found",
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.CenterHorizontally)
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        items(upcomingEventData) { event ->
+                            event?.let {
+                                VerticalEventCard(
+                                    modifier = Modifier,
+                                    event = it,
+                                    image = 2,
+                                    onClickEvent = { onClickEvent(it.id.toString()) }
+                                )
+                            }
                         }
                     }
                 }
@@ -109,7 +122,7 @@ fun UpcomingScreen(
             is Result.Error -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.TopCenter
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = (upcomingEvents as Result.Error).error,
