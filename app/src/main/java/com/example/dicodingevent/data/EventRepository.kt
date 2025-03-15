@@ -13,6 +13,14 @@ class EventRepository(private val apiService: ApiService) {
         }
     }
 
+    suspend fun getReminderEvent(): List<EventsItem?>? {
+        return try {
+            apiService.getReminderEvent().listEvents
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     suspend fun getEventById(id: String): EventsItem? {
         return try {
             apiService.getEventById(id).event
