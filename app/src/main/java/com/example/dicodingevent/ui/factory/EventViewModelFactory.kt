@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.dicodingevent.data.EventRepository
 import com.example.dicodingevent.ui.screen.finished.FinishedViewModel
 import com.example.dicodingevent.ui.screen.home.HomeViewModel
+import com.example.dicodingevent.ui.screen.setting.SettingViewModel
 import com.example.dicodingevent.ui.screen.upcoming.UpcomingViewModel
 
 class EventViewModelFactory(
@@ -16,6 +17,7 @@ class EventViewModelFactory(
             modelClass.isAssignableFrom(HomeViewModel::class.java) -> HomeViewModel(repository) as T
             modelClass.isAssignableFrom(UpcomingViewModel::class.java) -> UpcomingViewModel(repository) as T
             modelClass.isAssignableFrom(FinishedViewModel::class.java) -> FinishedViewModel(repository) as T
+            modelClass.isAssignableFrom(SettingViewModel::class.java) -> SettingViewModel(repository) as T
 
             else -> throw IllegalArgumentException("Unknown ViewModel class: " + modelClass.name)
         }
