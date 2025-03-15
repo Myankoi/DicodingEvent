@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.androidx.room.runtime.v261)
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.work.runtime.ktx)
     ksp(libs.androidx.room.compiler.v261)
     implementation(libs.androidx.room.ktx)
 
